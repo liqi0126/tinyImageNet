@@ -1,20 +1,15 @@
 import os
-import shutil
-import time
-import warnings
-import random
 import pandas as pd
 
 import torch
-import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torchvision.models as models
 
 from lib.io_utils import parse_args
-from lib.utils import check_dir, AverageMeter, ProgressMeter
 from lib.dataset import get_loader
 
 best_acc1 = 0
+
 
 def test(test_loader, model, args):
     # switch to evaluate mode
@@ -22,9 +17,8 @@ def test(test_loader, model, args):
 
     results = pd.DataFrame(test_loader.dataset.images, columns=['Id', 'Category'])
     results['Id'] = results['Id'].apply(lambda x: x.split('/')[1])
-    
+
     with torch.no_grad():
-        end = time.time()
         for i, images in enumerate(test_loader):
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
@@ -32,10 +26,10 @@ def test(test_loader, model, args):
             # compute output
             output = model.forward(images)
             pred = output.argmax(dim=-1)
-            results.iloc[i*args.batch_size:(i+1)*args.batch_size,1] = pred.cpu().numpy()
+            results.iloc[i*args.batch_size:(i+1)*args.batch_size, 1] = pred.cpu().numpy()
 
     results.to_csv("results.csv", index=False)
-    
+
 
 def main():
     args = parse_args()
@@ -88,11 +82,11 @@ def main():
 
     cudnn.benchmark = True
 
-    # Data loading code    
+    # Data loading code
     test_loader = get_loader(args.data, 'data/test.txt', args.batch_size, args.workers, False)
 
     test(test_loader, model, args)
-    
+
 
 if __name__ == '__main__':
     main()

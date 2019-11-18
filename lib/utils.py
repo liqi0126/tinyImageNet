@@ -1,10 +1,11 @@
 import os
-import sys
+
 
 def check_dir(folder):
     if not os.path.isdir(folder):
         os.makedirs(folder)
     return folder
+
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""

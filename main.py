@@ -1,5 +1,4 @@
 import os
-import shutil
 import time
 import warnings
 import random
@@ -15,6 +14,7 @@ from lib.utils import check_dir, AverageMeter, ProgressMeter
 from lib.dataset import get_loader
 
 best_acc1 = 0
+
 
 def train(train_loader, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
@@ -105,6 +105,7 @@ def validate(val_loader, model, criterion, args):
 
     return top1.avg
 
+
 def accuracy(output, target, topk=(1,)):
     """Computes the accuracy over the k top predictions for the specified values of k"""
     with torch.no_grad():
@@ -120,13 +121,14 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
-    
+
+
 def adjust_learning_rate(optimizer, epoch, args):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
     lr = args.lr * (0.1 ** (epoch // 30))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
-    
+
 
 def main():
     args = parse_args()
@@ -196,7 +198,7 @@ def main():
 
     cudnn.benchmark = True
 
-    # Data loading code    
+    # Data loading code
     train_loader = get_loader(args.data, 'data/train.txt', args.batch_size, args.workers, True)
     val_loader = get_loader(args.data, 'data/val.txt', args.batch_size, args.workers, False)
 
@@ -214,7 +216,6 @@ def main():
         acc1 = validate(val_loader, model, criterion, args)
 
         # remember best acc@1 and save checkpoint
-        is_best = acc1 > best_acc1
         best_acc1 = max(acc1, best_acc1)
 
         if (epoch + 1) % args.save_freq == 0 or ((epoch + 1) == args.epochs):
@@ -224,11 +225,11 @@ def main():
                 'state_dict': model.state_dict(),
                 'best_acc1': best_acc1,
                 'optimizer': optimizer.state_dict(),
-              }
+            }
             if (epoch + 1) == args.epochs:
-                  filename = os.path.join(check_dir(args.save_dir), 'best_model.tar')
+                filename = os.path.join(check_dir(args.save_dir), 'best_model.tar')
             else:
-                  filename = os.path.join(check_dir(args.save_dir), f'{epoch}.tar')
+                filename = os.path.join(check_dir(args.save_dir), f'{epoch}.tar')
             print(f'=> saving checkpoint to {filename}')
             torch.save(state, filename)
 

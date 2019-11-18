@@ -6,9 +6,10 @@ model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
                      and callable(models.__dict__[name]))
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-    parser.add_argument('--data', default='./data', metavar='DIR', 
+    parser.add_argument('--data', default='./data', metavar='DIR',
                         help='path to dataset')
     parser.add_argument('--arch', metavar='ARCH', default='resnet18',
                         choices=model_names,
@@ -49,6 +50,5 @@ def parse_args():
                         help='seed for initializing training. ')
     parser.add_argument('--gpu', default=None, type=int,
                         help='GPU id to use.')
-    
+
     return parser.parse_args()
-    

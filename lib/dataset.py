@@ -1,17 +1,18 @@
 # Tiny ImangeNet Dataloader
 import os
-import sys
 import numpy as np
 from PIL import Image
 
 import torch
 from torchvision import transforms
 
+
 def default_loader(path):
     return Image.open(path).convert('RGB')
 
+
 class TinyImageNetDataset(torch.utils.data.Dataset):
-    def __init__(self, root, data_list, transform = None, loader = default_loader):
+    def __init__(self, root, data_list, transform=None, loader=default_loader):
         # root: your_path/TinyImageNet/
         # data_list: your_path/TinyImageNet/train.txt etc.
         images = []
@@ -22,7 +23,7 @@ class TinyImageNetDataset(torch.utils.data.Dataset):
 
             # test list contains only image name
             test_flag = True if len(items) == 1 else False
-            label = None if test_flag == True else np.array(int(items[1]))
+            label = None if test_flag else np.array(int(items[1]))
 
             if os.path.isfile(os.path.join(root, img_name)):
                 images.append((img_name, label))
@@ -37,14 +38,14 @@ class TinyImageNetDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         img_name, label = self.images[index]
         img = self.loader(os.path.join(self.root, img_name))
-        raw_img = img.copy()
         if self.transform is not None:
             img = self.transform(img)
         return (img, label) if label is not None else img
 
     def __len__(self):
         return len(self.images)
-    
+
+
 def get_loader(root, data_list, batch_size, workers=4, train=True):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 #     normalize = transforms.Normalize(mean=[0.507, 0.487, 0.441], std=[0.267, 0.257, 0.276])
