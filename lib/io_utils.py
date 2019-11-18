@@ -38,8 +38,8 @@ def parse_args():
                         dest='weight_decay')
     parser.add_argument('-p', '--print-freq', default=10, type=int,
                         metavar='N', help='print frequency (default: 10)')
-    parser.add_argument('--save-freq', default=10, type=int,
-                        metavar='S', help='save frequency (default: 10)')
+    parser.add_argument('--save-freq', default=50, type=int,
+                        metavar='S', help='save frequency (default: 50)')
     parser.add_argument('--save-dir', default='./output', type=str, metavar='PATH',
                         help='path to save models')
     parser.add_argument('--resume', default='', type=str, metavar='PATH',

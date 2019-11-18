@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torchvision.models as models
+from torch.utils.tensorboard import SummaryWriter
 from efficientnet_pytorch import EfficientNet
 
 from lib.io_utils import parse_args
@@ -17,7 +18,7 @@ from lib.dataset import get_loader
 best_acc1 = 0
 
 
-def train(train_loader, model, criterion, optimizer, epoch, args):
+def train(train_loader, model, criterion, optimizer, epoch, summary_writer,args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
@@ -54,6 +55,11 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         loss.backward()
         optimizer.step()
 
+        # tensorboard
+        step = epoch * len(train_loader) + i
+        summary_writer.add_scalar('acc1', acc1, step)
+        summary_writer.add_scalar('loss', loss, step)
+        
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
@@ -143,6 +149,9 @@ def main():
                       'from checkpoints.')
 
     global best_acc1
+    
+    log_dir = './output/' + args.save_dir + '/tensorboard'
+    summary_writer = SummaryWriter(log_dir)
 
     # create model
     if args.pretrained:
@@ -151,7 +160,7 @@ def main():
     else:
         print("=> creating model '{}'".format(args.arch))
         if(args.arch == "efficientNet-b7"):
-            model = EfficientNet.from_pretrained('efficientnet-b7') 
+            model = EfficientNet.from_pretrained('efficientnet-b7')
             model = nn.DataParallel(model)
         elif(args.arch == "resnext-101"):
             model = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x32d_wsl')
@@ -160,7 +169,7 @@ def main():
             model = models.__dict__[args.arch]()
 
     model = model.cuda()
-    
+
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().cuda()
 
@@ -196,7 +205,7 @@ def main():
         adjust_learning_rate(optimizer, epoch, args)
 
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch, args)
+        train(train_loader, model, criterion, optimizer, epoch, summary_writer, args)
 
         # evaluate on validation set
         acc1 = validate(val_loader, model, criterion, args)
@@ -211,10 +220,12 @@ def main():
                 'state_dict': model.state_dict(),
                 'optimizer': optimizer.state_dict(),
             }
+            
+            save_dir = './output/' + args.save_dir + '/checkpoints'
             if (epoch + 1) == args.epochs:
-                filename = os.path.join(check_dir(args.save_dir), 'best_model.tar')
+                filename = os.path.join(check_dir(save_dir), 'best_model.tar')
             else:
-                filename = os.path.join(check_dir(args.save_dir), f'{epoch}.tar')
+                filename = os.path.join(check_dir(save_dir), f'{epoch}.tar')
             print(f'=> saving checkpoint to {filename}')
             torch.save(state, filename)
 
