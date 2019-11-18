@@ -21,9 +21,7 @@ def test(test_loader, model, args):
     with torch.no_grad():
         for i, images in enumerate(test_loader):
             images = images.cuda(non_blocking=True)
-            
-            import ipdb; ipdb.set_trace()
-            
+
             # compute output
             output = model.forward(images)
             pred = output.argmax(dim=-1)
@@ -42,7 +40,7 @@ def main():
     else:
         print("=> creating model '{}'".format(args.arch))
         model = models.__dict__[args.arch]()
-    
+
     model = model.cuda()
 
     # optionally resume from a checkpoint

@@ -18,7 +18,7 @@ from lib.dataset import get_loader
 best_acc1 = 0
 
 
-def train(train_loader, model, criterion, optimizer, epoch, summary_writer,args):
+def train(train_loader, model, criterion, optimizer, epoch, summary_writer, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
@@ -57,9 +57,9 @@ def train(train_loader, model, criterion, optimizer, epoch, summary_writer,args)
 
         # tensorboard
         step = epoch * len(train_loader) + i
-        summary_writer.add_scalar('acc1', acc1, step)
-        summary_writer.add_scalar('loss', loss, step)
-        
+        summary_writer.add_scalar('train_acc1', acc1, step)
+        summary_writer.add_scalar('train_loss', loss, step)
+
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
@@ -68,7 +68,7 @@ def train(train_loader, model, criterion, optimizer, epoch, summary_writer,args)
             progress.display(i)
 
 
-def validate(val_loader, model, criterion, args):
+def validate(val_loader, model, criterion, epoch, summary_writer, args):
     batch_time = AverageMeter('Time', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f')
@@ -96,6 +96,11 @@ def validate(val_loader, model, criterion, args):
             losses.update(loss.item(), images.size(0))
             top1.update(acc1[0], images.size(0))
             top5.update(acc5[0], images.size(0))
+
+            # tensorboard
+            step = epoch * len(val_loader) + i
+            summary_writer.add_scalar('val_acc1', acc1, step)
+            summary_writer.add_scalar('val_loss', loss, step)
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -149,7 +154,7 @@ def main():
                       'from checkpoints.')
 
     global best_acc1
-    
+
     log_dir = './output/' + args.save_dir + '/tensorboard'
     summary_writer = SummaryWriter(log_dir)
 
@@ -198,7 +203,7 @@ def main():
     val_loader = get_loader(args.data, 'data/val.txt', args.batch_size, args.workers, False)
 
     if args.evaluate:
-        validate(val_loader, model, criterion, args)
+        validate(val_loader, model, criterion, 0, summary_writer, args)
         return
 
     for epoch in range(args.start_epoch, args.epochs):
@@ -208,7 +213,7 @@ def main():
         train(train_loader, model, criterion, optimizer, epoch, summary_writer, args)
 
         # evaluate on validation set
-        acc1 = validate(val_loader, model, criterion, args)
+        acc1 = validate(val_loader, model, criterion, epoch, summary_writer, args)
 
         # remember best acc@1 and save checkpoint
         best_acc1 = max(acc1, best_acc1)
@@ -220,7 +225,7 @@ def main():
                 'state_dict': model.state_dict(),
                 'optimizer': optimizer.state_dict(),
             }
-            
+
             save_dir = './output/' + args.save_dir + '/checkpoints'
             if (epoch + 1) == args.epochs:
                 filename = os.path.join(check_dir(save_dir), 'best_model.tar')
