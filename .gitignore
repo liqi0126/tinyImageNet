@@ -1,4 +1,7 @@
-*.tar
-.ipynb*
-*.zip
-/data
+data/
+__pycache__
+.vscode
+.ipynb_checkpoints
+
+output
+results.csv
