@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torchvision.models as models
+from efficientnet_pytorch import EfficientNet
 
 from lib.io_utils import parse_args
 from lib.utils import check_dir, AverageMeter, ProgressMeter
@@ -149,7 +150,10 @@ def main():
         model = models.__dict__[args.arch](pretrained=True)
     else:
         print("=> creating model '{}'".format(args.arch))
-        if(args.arch == "resnext-101"):
+        if(args.arch == "efficientNet-b7"):
+            model = EfficientNet.from_pretrained('efficientnet-b7') 
+            model = nn.DataParallel(model)
+        elif(args.arch == "resnext-101"):
             model = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x32d_wsl')
             model = nn.DataParallel(model)
         else:
