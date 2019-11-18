@@ -9,16 +9,18 @@ import torch.backends.cudnn as cudnn
 import torch.optim
 import torchvision.models as models
 from torch.utils.tensorboard import SummaryWriter
+from torch.optim.lr_scheduler import CosineAnnealingLR
 from efficientnet_pytorch import EfficientNet
 
 from lib.io_utils import parse_args
 from lib.utils import check_dir, AverageMeter, ProgressMeter
+from lib.utils import GradualWarmupScheduler
 from lib.dataset import get_loader
 
 best_acc1 = 0
 
 
-def train(train_loader, model, criterion, optimizer, epoch, summary_writer, args):
+def train(train_loader, model, criterion, optimizer, scheduler, epoch, summary_writer, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
@@ -50,13 +52,16 @@ def train(train_loader, model, criterion, optimizer, epoch, summary_writer, args
         top1.update(acc1[0], images.size(0))
         top5.update(acc5[0], images.size(0))
 
+        step = epoch * len(train_loader) + i
         # compute gradient and do SGD step
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        if scheduler is not None:
+            scheduler.step(step)
 
-        # tensorboard
-        step = epoch * len(train_loader) + i
+        # log
+        summary_writer.add_scalar('lr', optimizer.param_groups[0]['lr'], step)
         summary_writer.add_scalar('train_acc1', acc1, step)
         summary_writer.add_scalar('train_loss', loss, step)
 
@@ -97,17 +102,20 @@ def validate(val_loader, model, criterion, epoch, summary_writer, args):
             top1.update(acc1[0], images.size(0))
             top5.update(acc5[0], images.size(0))
 
-            # tensorboard
+            # log
             step = epoch * len(val_loader) + i
             summary_writer.add_scalar('val_acc1', acc1, step)
             summary_writer.add_scalar('val_loss', loss, step)
-
+            
+            
             # measure elapsed time
             batch_time.update(time.time() - end)
             end = time.time()
 
             if i % args.print_freq == 0:
                 progress.display(i)
+                
+               
 
         # TODO: this should also be done with the ProgressMeter
         print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
@@ -133,11 +141,16 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
-def adjust_learning_rate(optimizer, epoch, args):
-    """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-    lr = args.lr * (0.1 ** (epoch // 30))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
+def get_scheduler(optimizer, n_iter_per_epoch, args):
+    cosine_scheduler = CosineAnnealingLR(
+        optimizer=optimizer, eta_min=0.000001,
+        T_max=(args.epochs - args.warmup_epoch) * n_iter_per_epoch)
+    scheduler = GradualWarmupScheduler(
+        optimizer,
+        multiplier=args.warmup_multiplier,
+        total_epoch=args.warmup_epoch * n_iter_per_epoch,
+        after_scheduler=cosine_scheduler)
+    return scheduler
 
 
 def main():
@@ -175,12 +188,16 @@ def main():
 
     model = model.cuda()
 
-    # define loss function (criterion) and optimizer
+    # Data loading code
+    train_loader = get_loader(args.data, 'data/train.txt', args.batch_size, args.workers, True)
+    val_loader = get_loader(args.data, 'data/val.txt', args.batch_size, args.workers, False)
+    
+    # define loss function (criterion), optimizer and scheduler
     criterion = nn.CrossEntropyLoss().cuda()
-
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
+    scheduler = get_scheduler(optimizer, len(train_loader), args)
 
     # optionally resume from a checkpoint
     if args.resume:
@@ -191,6 +208,7 @@ def main():
             args.start_epoch = checkpoint['epoch']
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
+            scheduler.load_state_dict(checkpoint['scheduler'])
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
         else:
@@ -198,19 +216,13 @@ def main():
 
     cudnn.benchmark = True
 
-    # Data loading code
-    train_loader = get_loader(args.data, 'data/train.txt', args.batch_size, args.workers, True)
-    val_loader = get_loader(args.data, 'data/val.txt', args.batch_size, args.workers, False)
-
     if args.evaluate:
         validate(val_loader, model, criterion, 0, summary_writer, args)
         return
 
     for epoch in range(args.start_epoch, args.epochs):
-        adjust_learning_rate(optimizer, epoch, args)
-
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch, summary_writer, args)
+        train(train_loader, model, criterion, optimizer, scheduler, epoch, summary_writer, args)
 
         # evaluate on validation set
         acc1 = validate(val_loader, model, criterion, epoch, summary_writer, args)
@@ -223,7 +235,8 @@ def main():
                 'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
-                'optimizer': optimizer.state_dict(),
+                'optimizer' : optimizer.state_dict(),
+                'scheduler' : scheduler.state_dict(),
             }
 
             save_dir = './output/' + args.save_dir + '/checkpoints'

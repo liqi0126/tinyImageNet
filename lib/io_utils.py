@@ -20,6 +20,7 @@ def parse_args():
                         ' (default: resnet18)')
     parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                         help='number of data loading workers (default: 4)')
+    
     parser.add_argument('--epochs', default=200, type=int, metavar='N',
                         help='number of total epochs to run')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
@@ -29,6 +30,7 @@ def parse_args():
                         help='mini-batch size (default: 256), this is the total '
                              'batch size of all GPUs on the current node when '
                              'using Data Parallel or Distributed Data Parallel')
+    
     parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                         metavar='LR', help='initial learning rate', dest='lr')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
@@ -36,6 +38,12 @@ def parse_args():
     parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                         metavar='W', help='weight decay (default: 1e-4)',
                         dest='weight_decay')
+    
+    parser.add_argument('--warmup-epoch', default=20, type=int,
+                        metavar='E', help='warmup epoch (default: 20)')
+    parser.add_argument('--warmup-multiplier', default=16, type=int,
+                        metavar='E', help='warmup multiplier (default: 16)')
+    
     parser.add_argument('-p', '--print-freq', default=10, type=int,
                         metavar='N', help='print frequency (default: 10)')
     parser.add_argument('--save-freq', default=50, type=int,
