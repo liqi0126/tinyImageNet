@@ -149,16 +149,14 @@ def main():
         model = models.__dict__[args.arch](pretrained=True)
     else:
         print("=> creating model '{}'".format(args.arch))
-        model = models.__dict__[args.arch]()
+        if(args.arch == "resnext-101"):
+            model = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x32d_wsl')
+            model = nn.DataParallel(model)
+        else:
+            model = models.__dict__[args.arch]()
 
     model = model.cuda()
-#     # DataParallel will divide and allocate batch_size to all available GPUs
-#     if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
-#         model.features = torch.nn.DataParallel(model.features)
-#         model.cuda()
-#     else:
-#         model = torch.nn.DataParallel(model).cuda()
-
+    
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().cuda()
 

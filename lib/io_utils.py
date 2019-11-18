@@ -5,6 +5,7 @@ import torchvision.models as models
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
                      and callable(models.__dict__[name]))
+model_names.append("resnext-101")
 
 
 def parse_args():
