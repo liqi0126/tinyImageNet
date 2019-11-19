@@ -2,6 +2,7 @@ import os
 import time
 import warnings
 import random
+import pandas as pd
 
 import torch
 import torch.nn as nn
@@ -106,22 +107,40 @@ def validate(val_loader, model, criterion, epoch, summary_writer, args):
             step = epoch * len(val_loader) + i
             summary_writer.add_scalar('val_acc1', acc1, step)
             summary_writer.add_scalar('val_loss', loss, step)
-            
-            
+
             # measure elapsed time
             batch_time.update(time.time() - end)
             end = time.time()
 
             if i % args.print_freq == 0:
                 progress.display(i)
-                
-               
 
         # TODO: this should also be done with the ProgressMeter
         print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
               .format(top1=top1, top5=top5))
 
     return top1.avg
+
+
+def test(test_loader, model, args):
+    # switch to evaluate mode
+    model.eval()
+
+    results = pd.DataFrame(test_loader.dataset.images, columns=['Id', 'Category'])
+    results['Id'] = results['Id'].apply(lambda x: x.split('/')[1])
+
+    with torch.no_grad():
+        for i, images in enumerate(test_loader):
+            images = images.cuda(non_blocking=True)
+
+            # compute output
+            output = model.forward(images)
+            pred = output.argmax(dim=-1)
+            results.iloc[i*args.batch_size:(i+1)*args.batch_size, 1] = pred.cpu().numpy()
+
+    resultsName = args.output_dir + "results.csv"
+    results.to_csv(resultsName, index=False)
+    print(f'=> save results to ' + resultsName)
 
 
 def accuracy(output, target, topk=(1,)):
@@ -168,8 +187,7 @@ def main():
 
     global best_acc1
 
-    log_dir = './output/' + args.save_dir + '/tensorboard'
-    summary_writer = SummaryWriter(log_dir)
+    summary_writer = SummaryWriter(args.log_dir)
 
     # create model
     if args.pretrained:
@@ -191,7 +209,8 @@ def main():
     # Data loading code
     train_loader = get_loader(args.data, 'data/train.txt', args.batch_size, args.workers, True)
     val_loader = get_loader(args.data, 'data/val.txt', args.batch_size, args.workers, False)
-    
+    test_loader = get_loader(args.data, 'data/test.txt', args.batch_size, args.workers, False)
+
     # define loss function (criterion), optimizer and scheduler
     criterion = nn.CrossEntropyLoss().cuda()
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
@@ -235,17 +254,17 @@ def main():
                 'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
-                'optimizer' : optimizer.state_dict(),
-                'scheduler' : scheduler.state_dict(),
+                'optimizer': optimizer.state_dict(),
+                'scheduler': scheduler.state_dict(),
             }
-
-            save_dir = './output/' + args.save_dir + '/checkpoints'
             if (epoch + 1) == args.epochs:
-                filename = os.path.join(check_dir(save_dir), 'best_model.tar')
+                filename = os.path.join(check_dir(args.save_dir), 'best_model.tar')
             else:
-                filename = os.path.join(check_dir(save_dir), f'{epoch}.tar')
+                filename = os.path.join(check_dir(args.save_dir), f'{epoch}.tar')
             print(f'=> saving checkpoint to {filename}')
             torch.save(state, filename)
+
+    test(test_loader, model, args)
 
 
 if __name__ == '__main__':

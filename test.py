@@ -2,8 +2,10 @@ import os
 import pandas as pd
 
 import torch
+import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torchvision.models as models
+from efficientnet_pytorch import EfficientNet
 
 from lib.io_utils import parse_args
 from lib.dataset import get_loader
@@ -27,7 +29,9 @@ def test(test_loader, model, args):
             pred = output.argmax(dim=-1)
             results.iloc[i*args.batch_size:(i+1)*args.batch_size, 1] = pred.cpu().numpy()
 
-    results.to_csv("results.csv", index=False)
+    resultsName = args.output_dir + "results.csv"
+    results.to_csv(resultsName, index=False)
+    print(f'=> save results to ' + resultsName)
 
 
 def main():
@@ -39,7 +43,14 @@ def main():
         model = models.__dict__[args.arch](pretrained=True)
     else:
         print("=> creating model '{}'".format(args.arch))
-        model = models.__dict__[args.arch]()
+        if(args.arch == "efficientNet-b7"):
+            model = EfficientNet.from_pretrained('efficientnet-b7')
+            model = nn.DataParallel(model)
+        elif(args.arch == "resnext-101"):
+            model = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x32d_wsl')
+            model = nn.DataParallel(model)
+        else:
+            model = models.__dict__[args.arch]()
 
     model = model.cuda()
 
