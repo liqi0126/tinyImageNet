@@ -61,7 +61,7 @@ def parse_args():
 
     args = parser.parse_args()
     vars(args)['output_dir'] = './output/' + args.model_dir + '/'
-    vars(args)['check_dir'] = './output/' + args.model_dir + '/checkpoints'
+    vars(args)['save_dir'] = './output/' + args.model_dir + '/checkpoints'
     vars(args)['log_dir'] = './output/' + args.model_dir + '/tensorboard'
 
     if args.resume != '':
