@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+
+
+def naive_cross_entropy_loss(input, target):
+    return -(input.log_softmax(dim=-1) * target).sum(dim=-1).mean()
 
 
 class LabelSmoothingLoss(nn.Module):
@@ -29,4 +32,4 @@ class LabelSmoothingLoss(nn.Module):
         model_prob = self.one_hot.repeat(target.size(0), 1)
         model_prob.scatter_(1, target.unsqueeze(1), self.confidence)
 
-        return -F.kl_div(output, model_prob)
+        return naive_cross_entropy_loss(output, model_prob)
