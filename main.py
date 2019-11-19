@@ -17,6 +17,7 @@ from lib.io_utils import parse_args
 from lib.utils import check_dir, AverageMeter, ProgressMeter
 from lib.utils import GradualWarmupScheduler
 from lib.dataset import get_loader
+from lib.loss import LabelSmoothingLoss
 
 best_acc1 = 0
 
@@ -212,7 +213,7 @@ def main():
     test_loader = get_loader(args.data, 'data/test.txt', args.batch_size, args.workers, False)
 
     # define loss function (criterion), optimizer and scheduler
-    criterion = nn.CrossEntropyLoss().cuda()
+    criterion = LabelSmoothingLoss(label_smoothing=0.1, tgt_size=1000, keep_index=100).cuda()
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
