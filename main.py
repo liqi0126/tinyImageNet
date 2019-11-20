@@ -213,7 +213,10 @@ def main():
     test_loader = get_loader(args.data, 'data/test.txt', args.batch_size, args.workers, False)
 
     # define loss function (criterion), optimizer and scheduler
-    criterion = LabelSmoothingLoss(label_smoothing=0.1, tgt_size=1000, keep_index=100).cuda()
+    if args.label_smoothing > 0.0:
+        criterion = LabelSmoothingLoss(label_smoothing=0.1, tgt_size=1000, keep_index=100).cuda()
+    else:
+        criterion = nn.CrossEntropyLoss().cuda()
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
