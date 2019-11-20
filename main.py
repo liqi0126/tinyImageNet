@@ -3,7 +3,6 @@ import time
 import warnings
 import random
 import pandas as pd
-from numpy.random import beta
 
 import torch
 import torch.nn as nn
@@ -19,6 +18,7 @@ from lib.utils import check_dir, AverageMeter, ProgressMeter
 from lib.utils import GradualWarmupScheduler
 from lib.dataset import get_loader
 from lib.mixup import mixup_data, mixup_criterion
+from lib.loss import LabelSmoothingLoss
 
 best_acc1 = 0
 
@@ -44,7 +44,7 @@ def train(train_loader, model, criterion, optimizer, scheduler, epoch, summary_w
 
         images = images.cuda(non_blocking=True)
         target = target.cuda(non_blocking=True)
-        
+
         if args.mixup:
             images, target_a, target_b, lam = mixup_data(images, target, args.alpha)
             output = model(images)
@@ -218,7 +218,10 @@ def main():
     test_loader = get_loader(args.data, 'data/test.txt', args.batch_size, args.workers, False)
 
     # define loss function (criterion), optimizer and scheduler
-    criterion = nn.CrossEntropyLoss().cuda()
+    if args.label_smoothing > 0.0:
+        criterion = LabelSmoothingLoss(label_smoothing=0.1, tgt_size=1000, keep_index=100).cuda()
+    else:
+        criterion = nn.CrossEntropyLoss().cuda()
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)

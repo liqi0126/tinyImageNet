@@ -33,7 +33,7 @@ def parse_args():
 
     parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                         metavar='LR', help='initial learning rate', dest='lr')
-    parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
+    parser.add_argument('--momentum', default=0.9, type=float, metavar='m',
                         help='momentum')
     parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                         metavar='W', help='weight decay (default: 1e-4)',
@@ -43,6 +43,9 @@ def parse_args():
                         help='whether to use mixup')
     parser.add_argument('--alpha', default=1.0, type=float,
                         help='alpha used for mix up')
+
+    parser.add_argument('--label-smoothing', default=0.0, type=float,
+                        help='label smoothing ratio')
 
     parser.add_argument('--warmup-epoch', default=20, type=int,
                         metavar='E', help='warmup epoch (default: 20)')
