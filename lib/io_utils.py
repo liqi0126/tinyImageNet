@@ -38,9 +38,9 @@ def parse_args():
     parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                         metavar='W', help='weight decay (default: 1e-4)',
                         dest='weight_decay')
-    
-    parser.add_argument('mixup'， default=True, type=bool,
-                       help='whether to use mixup')
+
+    parser.add_argument('--mixup', default=True, type=bool,
+                        help='whether to use mixup')
     parser.add_argument('--alpha', default=1.0, type=float,
                         help='alpha used for mix up')
 
