@@ -3,6 +3,7 @@ import time
 import warnings
 import random
 import pandas as pd
+from numpy.random import beta
 
 import torch
 import torch.nn as nn
@@ -17,6 +18,7 @@ from lib.io_utils import parse_args
 from lib.utils import check_dir, AverageMeter, ProgressMeter
 from lib.utils import GradualWarmupScheduler
 from lib.dataset import get_loader
+from lib.mixup import mixup_data, mixup_criterion
 
 best_acc1 = 0
 
@@ -42,10 +44,11 @@ def train(train_loader, model, criterion, optimizer, scheduler, epoch, summary_w
 
         images = images.cuda(non_blocking=True)
         target = target.cuda(non_blocking=True)
+        images, target_a, target_b, lam = mixup_data(images, target, args.alpha)
 
         # compute output
         output = model(images)
-        loss = criterion(output, target)
+        loss = mixup_criterion(criterion, output, target_a, target_b, lam)
 
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))

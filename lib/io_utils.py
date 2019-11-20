@@ -39,6 +39,9 @@ def parse_args():
                         metavar='W', help='weight decay (default: 1e-4)',
                         dest='weight_decay')
 
+    parser.add_argument('--alpha', default=1.0, type=float,
+                        help='alpha used for mix up')
+
     parser.add_argument('--warmup-epoch', default=20, type=int,
                         metavar='E', help='warmup epoch (default: 20)')
     parser.add_argument('--warmup-multiplier', default=16, type=int,
