@@ -44,11 +44,14 @@ def train(train_loader, model, criterion, optimizer, scheduler, epoch, summary_w
 
         images = images.cuda(non_blocking=True)
         target = target.cuda(non_blocking=True)
-        images, target_a, target_b, lam = mixup_data(images, target, args.alpha)
-
-        # compute output
-        output = model(images)
-        loss = mixup_criterion(criterion, output, target_a, target_b, lam)
+        
+        if args.mixup:
+            images, target_a, target_b, lam = mixup_data(images, target, args.alpha)
+            output = model(images)
+            loss = mixup_criterion(criterion, output, target_a, target_b, lam)
+        else:
+            output = model(images)
+            loss = criterion(output, target)
 
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
