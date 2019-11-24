@@ -5,9 +5,11 @@ import torchvision.models as models
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
                      and callable(models.__dict__[name]))
-model_names.append("resnext-101")
+model_names.append("resnext101")
 model_names.append("efficientNet-b7")
 model_names.append("se_resnet101")
+model_names.append("se_resnext101")
+model_names.append("wide_se_resnext101")
 
 
 def parse_args():

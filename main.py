@@ -17,6 +17,7 @@ from lib.io_utils import parse_args
 from lib.utils import check_dir, AverageMeter, ProgressMeter
 from lib.utils import GradualWarmupScheduler
 from lib.dataset import get_loader
+from lib.model import se_resnext101_32x48d, wide_se_resnext101_32x32d
 from lib.mixup import mixup_data, mixup_criterion
 from lib.loss import LabelSmoothingLoss
 
@@ -204,12 +205,16 @@ def main():
         if(args.arch == "efficientNet-b7"):
             model = EfficientNet.from_pretrained('efficientnet-b7')
             model = nn.DataParallel(model)
-        elif(args.arch == "resnext-101"):
-            model = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x32d_wsl',
-                                   num_classes=100, pretrained=True)
+        elif(args.arch == "resnext101"):
+            model = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x32d_wsl')
             model = nn.DataParallel(model)
         elif(args.arch == "se_resnet101"):
             model = torch.hub.load('moskomule/senet.pytorch', 'se_resnet101', num_classes=100)
+        elif(args.arch == "se_resnext101"):
+            model = se_resnext101_32x48d(num_classes=100)
+        elif(args.arch == "wide_se_resnext101"):
+            model = wide_se_resnext101_32x32d(num_classes=100)
+            model = nn.DataParallel(model)
         else:
             model = models.__dict__[args.arch]()
 
@@ -225,6 +230,7 @@ def main():
         criterion = LabelSmoothingLoss(label_smoothing=0.1, tgt_size=1000, keep_index=100).cuda()
     else:
         criterion = nn.CrossEntropyLoss().cuda()
+
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
