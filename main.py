@@ -205,8 +205,11 @@ def main():
             model = EfficientNet.from_pretrained('efficientnet-b7')
             model = nn.DataParallel(model)
         elif(args.arch == "resnext-101"):
-            model = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x32d_wsl')
+            model = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x32d_wsl',
+                                   num_classes=100, pretrained=True)
             model = nn.DataParallel(model)
+        elif(args.arch == "se_resnet101"):
+            model = torch.hub.load('moskomule/senet.pytorch', 'se_resnet101', num_classes=100)
         else:
             model = models.__dict__[args.arch]()
 
