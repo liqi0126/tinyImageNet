@@ -47,6 +47,9 @@ def parse_args():
     parser.add_argument('--alpha', default=1.0, type=float,
                         help='alpha used for mix up')
 
+    parser.add_argument('--augment', default=True, type=bool,
+                        help='whether to use data augment')
+
     parser.add_argument('--label-smoothing', default=0.0, type=float,
                         help='label smoothing ratio')
 

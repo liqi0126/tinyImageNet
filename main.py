@@ -221,7 +221,10 @@ def main():
     model = model.cuda()
 
     # Data loading code
-    train_loader = get_loader(args.data, 'data/train.txt', args.batch_size, args.workers, True)
+    if args.augment:
+        train_loader = get_loader(args.data, 'data/train.txt', args.batch_size, args.workers, True)
+    else:
+        train_loader = get_loader(args.data, 'data/train.txt', args.batch_size, args.workers, False)
     val_loader = get_loader(args.data, 'data/val.txt', args.batch_size, args.workers, False)
     test_loader = get_loader(args.data, 'data/test.txt', args.batch_size, args.workers, False)
 
