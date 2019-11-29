@@ -22,10 +22,6 @@ from lib.mixup import mixup_data, mixup_criterion
 from lib.loss import LabelSmoothingLoss
 
 best_acc1 = 0
-#os.environ['CUDA_VISIBLE_DEVICES'] = '2,3'
-
-# epoch, train_acc, train_loss, test_acc, test_loss
-history_list = [[],[],[],[],[]]
 
 
 def train(train_loader, model, criterion, optimizer, scheduler, epoch, summary_writer, args):
@@ -84,8 +80,6 @@ def train(train_loader, model, criterion, optimizer, scheduler, epoch, summary_w
         if i % args.print_freq == 0:
             progress.display(i)
 
-    return top1.avg, losses.avg
-
 
 def validate(val_loader, model, criterion, epoch, summary_writer, args):
     batch_time = AverageMeter('Time', ':6.3f')
@@ -132,7 +126,7 @@ def validate(val_loader, model, criterion, epoch, summary_writer, args):
         print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
               .format(top1=top1, top5=top5))
 
-    return top1.avg, losses.avg
+    return top1.avg
 
 
 def test(test_loader, model, args):
@@ -270,28 +264,13 @@ def main():
 
     for epoch in range(args.start_epoch, args.epochs):
         # train for one epoch
-        train_acc1, train_loss = train(train_loader, model, criterion, optimizer, scheduler, epoch, summary_writer, args)
+        train(train_loader, model, criterion, optimizer, scheduler, epoch, summary_writer, args)
 
         # evaluate on validation set
-        val_acc1, val_loss = validate(val_loader, model, criterion, epoch, summary_writer, args)
-
-        # add to history list
-        # epoch, train_acc1, train_loss, val_acc1, val_loss
-        history_list[0].append(epoch)
-        history_list[1].append(train_acc1)
-        history_list[2].append(train_loss)
-        history_list[3].append(val_acc1)
-        history_list[4].append(val_loss)
-
-        with open(args.arch + '-history.txt', 'w') as f:
-            for i in range(len(history_list[0])):
-                for j in range(5):
-                    f.write(str(history_list[j][i]))
-                    f.write('\t')
-                f.write('\n')
+        acc1 = validate(val_loader, model, criterion, epoch, summary_writer, args)
 
         # remember best acc@1 and save checkpoint
-        best_acc1 = max(val_acc1, best_acc1)
+        best_acc1 = max(acc1, best_acc1)
 
         if (epoch + 1) % args.save_freq == 0 or ((epoch + 1) == args.epochs):
             state = {
