@@ -243,14 +243,16 @@ def main():
     if args.resume:
         if os.path.isfile(args.resume):
             print("=> loading checkpoint from '{}'".format(args.resume))
-            loc = 'cuda' + os.environ["CUDA_VISIBLE_DEVICES"]
-            checkpoint = torch.load(args.resume, map_location=loc)
+            # loc = 'cuda' + os.environ["CUDA_VISIBLE_DEVICES"]
+            checkpoint = torch.load(args.resume, map_location=lambda storage, loc: storage)
             args.start_epoch = checkpoint['epoch']
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             scheduler.load_state_dict(checkpoint['scheduler'])
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
+            del checkpoint
+            torch.cuda.empty_cache()
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
 
