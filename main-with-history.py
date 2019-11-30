@@ -23,7 +23,7 @@ from lib.mixup import mixup_data, mixup_criterion
 from lib.loss import LabelSmoothingLoss
 
 best_acc1 = 0
-os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
+#os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 # epoch, train_acc, train_loss, test_acc, test_loss
 history_list = [[],[],[],[],[]]
@@ -308,7 +308,7 @@ def main():
         history_list[3].append(val_acc1)
         history_list[4].append(val_loss)
 
-        with open(args.arch + '-history.txt', 'w') as f:
+        with open(args.output_dir + args.arch + '-history.txt', 'w') as f:
             for i in range(len(history_list[0])):
                 for j in range(5):
                     f.write(str(history_list[j][i]))
