@@ -177,7 +177,7 @@ def accuracy(output, target, topk=(1,)):
 def get_scheduler(optimizer, n_iter_per_epoch, args):
     cosine_scheduler = CosineAnnealingLR(
         optimizer=optimizer, eta_min=0.000001,
-        T_max=(args.epochs - args.warmup_epoch) * n_iter_per_epoch)
+        T_max=(args.epochs - args.start_epoch - args.warmup_epoch) * n_iter_per_epoch)
     scheduler = GradualWarmupScheduler(
         optimizer,
         multiplier=args.warmup_multiplier,
@@ -274,8 +274,8 @@ def main():
             checkpoint = torch.load(args.resume, map_location=lambda storage, loc: storage)
             args.start_epoch = checkpoint['epoch']
             model.load_state_dict(checkpoint['state_dict'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
-            scheduler.load_state_dict(checkpoint['scheduler'])
+            # optimizer.load_state_dict(checkpoint['optimizer'])
+            # scheduler.load_state_dict(checkpoint['scheduler'])
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
             del checkpoint
@@ -289,7 +289,7 @@ def main():
         validate(val_loader, model, criterion, 0, summary_writer, args)
         return
 
-    for epoch in range(args.start_epoch, args.epochs):
+    for epoch in range(args.epochs - args.start_epoch):
         # train for one epoch
         train_acc1, train_loss = train(ada_manager.data_loader, model, criterion, optimizer, scheduler, epoch, summary_writer, args)
 
@@ -322,8 +322,8 @@ def main():
                 'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'scheduler': scheduler.state_dict(),
+                # 'optimizer': optimizer.state_dict(),
+                # 'scheduler': scheduler.state_dict(),
             }
             if (epoch + 1) == args.epochs:
                 filename = os.path.join(check_dir(args.save_dir), 'best_model.tar')
