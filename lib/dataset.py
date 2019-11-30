@@ -5,10 +5,35 @@ from PIL import Image
 
 import torch
 from torchvision import transforms
-
+import random
 
 def default_loader(path):
     return Image.open(path).convert('RGB')
+
+
+def special_transfrom(img):
+    # 'train/0/0_0.jpg' - 'train/9/9_999.jpg'
+    other_class = random.randint(0, 99)
+    other_index = random.randint(0, 999)
+    other_img_name = 'train/' + str(other_class) + '/' + str(other_class) + '_' + str(other_index) + '.jpg'
+    
+    root = 'data'
+    other_img = default_loader(os.path.join(root, other_img_name))
+        
+    # 25x25
+    smaller_L = 25
+    
+    # shrink    
+    other_img = other_img.resize((smaller_L, smaller_L))
+    
+    # shift
+    corner_x = random.randint(0, 64 - smaller_L)
+    corner_y = random.randint(0, 64 - smaller_L)
+    
+    # attach
+    img.paste(other_img, (corner_x, corner_y))
+    
+    return img
 
 
 class TinyImageNetDataset(torch.utils.data.Dataset):
@@ -34,11 +59,13 @@ class TinyImageNetDataset(torch.utils.data.Dataset):
         self.images = images
         self.transform = transform
         self.loader = loader
+        self.special_transfrom = special_transfrom
 
     def __getitem__(self, index):
         img_name, label = self.images[index]
         img = self.loader(os.path.join(self.root, img_name))
         if self.transform is not None:
+            # img = self.special_transfrom(img) # attach another picture on the picture for training
             img = self.transform(img)
         return (img, label) if label is not None else img
 
@@ -54,8 +81,14 @@ def get_loader(root, data_list, batch_size, workers=4, train=True):
             transforms.RandomResizedCrop(64),
             transforms.ColorJitter(
                 brightness=0.4, contrast=0.4, saturation=0.4),
+            transforms.RandomRotation(45),
             transforms.RandomHorizontalFlip(),
+            #transforms.RandomVerticalFlip(),
+            #transforms.RandomAffine(90),
+            #transforms.RandomGrayscale(),
+            #transforms.RandomPerspective(),
             transforms.ToTensor(),
+            #transforms.RandomErasing(),
             normalize
         ])
     else:
