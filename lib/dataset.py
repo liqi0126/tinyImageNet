@@ -7,6 +7,7 @@ import torch
 from torchvision import transforms
 import random
 
+
 def default_loader(path):
     return Image.open(path).convert('RGB')
 
@@ -16,23 +17,23 @@ def special_transfrom(img):
     other_class = random.randint(0, 99)
     other_index = random.randint(0, 999)
     other_img_name = 'train/' + str(other_class) + '/' + str(other_class) + '_' + str(other_index) + '.jpg'
-    
+
     root = 'data'
     other_img = default_loader(os.path.join(root, other_img_name))
-        
+
     # 25x25
     smaller_L = 25
-    
-    # shrink    
+
+    # shrink
     other_img = other_img.resize((smaller_L, smaller_L))
-    
+
     # shift
     corner_x = random.randint(0, 64 - smaller_L)
     corner_y = random.randint(0, 64 - smaller_L)
-    
+
     # attach
     img.paste(other_img, (corner_x, corner_y))
-    
+
     return img
 
 
@@ -83,12 +84,12 @@ def get_loader(root, data_list, batch_size, workers=4, train=True):
                 brightness=0.4, contrast=0.4, saturation=0.4),
             transforms.RandomRotation(45),
             transforms.RandomHorizontalFlip(),
-            #transforms.RandomVerticalFlip(),
-            #transforms.RandomAffine(90),
-            #transforms.RandomGrayscale(),
-            #transforms.RandomPerspective(),
+            # transforms.RandomVerticalFlip(),
+            # transforms.RandomAffine(90),
+            # transforms.RandomGrayscale(),
+            # transforms.RandomPerspective(),
             transforms.ToTensor(),
-            #transforms.RandomErasing(),
+            # transforms.RandomErasing(),
             normalize
         ])
     else:

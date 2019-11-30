@@ -25,7 +25,7 @@ best_acc1 = 0
 #os.environ['CUDA_VISIBLE_DEVICES'] = '2,3'
 
 # epoch, train_acc, train_loss, test_acc, test_loss
-history_list = [[],[],[],[],[]]
+history_list = [[], [], [], [], []]
 
 
 def train(train_loader, model, criterion, optimizer, scheduler, epoch, summary_writer, args):
@@ -270,7 +270,8 @@ def main():
 
     for epoch in range(args.start_epoch, args.epochs):
         # train for one epoch
-        train_acc1, train_loss = train(train_loader, model, criterion, optimizer, scheduler, epoch, summary_writer, args)
+        train_acc1, train_loss = train(train_loader, model, criterion, optimizer,
+                                       scheduler, epoch, summary_writer, args)
 
         # evaluate on validation set
         val_acc1, val_loss = validate(val_loader, model, criterion, epoch, summary_writer, args)
