@@ -17,12 +17,13 @@ from lib.io_utils import parse_args
 from lib.utils import check_dir, AverageMeter, ProgressMeter
 from lib.utils import GradualWarmupScheduler
 from lib.dataset import get_loader
+from lib.dataset import FakeAdaBoostDataManager
 from lib.model import se_resnext101_32x48d, wide_se_resnext101_32x32d
 from lib.mixup import mixup_data, mixup_criterion
 from lib.loss import LabelSmoothingLoss
 
 best_acc1 = 0
-#os.environ['CUDA_VISIBLE_DEVICES'] = '2,3'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
 
 # epoch, train_acc, train_loss, test_acc, test_loss
 history_list = [[],[],[],[],[]]
@@ -185,6 +186,26 @@ def get_scheduler(optimizer, n_iter_per_epoch, args):
     return scheduler
 
 
+def update_images_weight_for_AdaBoost(ada_manager, model, train_acc1):
+    torch_AC_array = []
+
+    for i, (images, target) in enumerate(ada_manager.data_loader):
+        images = images.cuda(non_blocking=True)
+        target = target.cuda(non_blocking=True)
+
+        with torch.no_grad():
+            output = model(images)
+            _, pred = output.topk(1, 1, True, True)
+            pred = pred.t()
+            correct = pred.eq(target.view(1, -1).expand_as(pred))
+
+            for ac in correct[0].cpu().numpy().tolist():
+                torch_AC_array.append(ac)
+
+    print("Finished: caculating torch_AC_array")
+    ada_manager.updata_distribution(torch_AC_array, train_acc1)
+
+
 def main():
     args = parse_args()
 
@@ -228,9 +249,9 @@ def main():
 
     # Data loading code
     if args.augment:
-        train_loader = get_loader(args.data, 'data/train.txt', args.batch_size, args.workers, True)
+        ada_manager = FakeAdaBoostDataManager(args.data, 'data/train.txt', args.batch_size, args.workers, True, args.using_AdaBoost)
     else:
-        train_loader = get_loader(args.data, 'data/train.txt', args.batch_size, args.workers, False)
+        ada_manager = FakeAdaBoostDataManager(args.data, 'data/train.txt', args.batch_size, args.workers, False, args.using_AdaBoost)
     val_loader = get_loader(args.data, 'data/val.txt', args.batch_size, args.workers, False)
     test_loader = get_loader(args.data, 'data/test.txt', args.batch_size, args.workers, False)
 
@@ -243,7 +264,7 @@ def main():
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
-    scheduler = get_scheduler(optimizer, len(train_loader), args)
+    scheduler = get_scheduler(optimizer, len(ada_manager.data_loader), args)
 
     # optionally resume from a checkpoint
     if args.resume:
@@ -270,7 +291,11 @@ def main():
 
     for epoch in range(args.start_epoch, args.epochs):
         # train for one epoch
-        train_acc1, train_loss = train(train_loader, model, criterion, optimizer, scheduler, epoch, summary_writer, args)
+        train_acc1, train_loss = train(ada_manager.data_loader, model, criterion, optimizer, scheduler, epoch, summary_writer, args)
+        
+        # update AdaBoost's images weight
+        if args.using_AdaBoost:
+            update_images_weight_for_AdaBoost(ada_manager, model, float(train_acc1) / 100)
 
         # evaluate on validation set
         val_acc1, val_loss = validate(val_loader, model, criterion, epoch, summary_writer, args)
