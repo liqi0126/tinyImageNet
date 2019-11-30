@@ -259,7 +259,7 @@ def main():
     cudnn.benchmark = True
 
     if args.evaluate:
-        validate(val_loader, model, criterion, 0, summary_writer, args)
+        test(test_loader, model, args)
         return
 
     for epoch in range(args.start_epoch, args.epochs):
