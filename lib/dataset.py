@@ -6,7 +6,6 @@ from PIL import Image
 import torch
 from torchvision import transforms
 import random
-import math
 
 
 def default_loader(path):
@@ -85,7 +84,6 @@ class FakeAdaBoostDataManager():
 
         # set transform
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        #normalize = transforms.Normalize(mean=[0.507, 0.487, 0.441], std=[0.267, 0.257, 0.276])
         if train:
             self.transform = transforms.Compose([
                 transforms.RandomResizedCrop(64),
@@ -93,12 +91,12 @@ class FakeAdaBoostDataManager():
                     brightness=0.4, contrast=0.4, saturation=0.4),
                 transforms.RandomRotation(45),
                 transforms.RandomHorizontalFlip(),
-                #transforms.RandomVerticalFlip(),
-                #transforms.RandomAffine(90),
-                #transforms.RandomGrayscale(),
-                #transforms.RandomPerspective(),
+                # transforms.RandomVerticalFlip(),
+                # transforms.RandomAffine(90),
+                # transforms.RandomGrayscale(),
+                # transforms.RandomPerspective(),
                 transforms.ToTensor(),
-                #transforms.RandomErasing(),
+                # transforms.RandomErasing(),
                 normalize
             ])
         else:
@@ -129,11 +127,10 @@ class FakeAdaBoostDataManager():
 
         using_shuffle_in_data_loader = not self.using_AdaBoost
         self.data_loader = torch.utils.data.DataLoader(self.dataset, batch_size=self.batch_size, shuffle=using_shuffle_in_data_loader,
-                                         num_workers=self.workers, pin_memory=True)
-
+                                                       num_workers=self.workers, pin_memory=True)
 
     def quick_roulette(self, sum_list):
-        sum_w = random.uniform(0,1)
+        sum_w = random.uniform(0, 1)
 
         lo = 0
         hi = len(sum_list)
@@ -144,9 +141,8 @@ class FakeAdaBoostDataManager():
                 lo = mi + 1
             else:
                 hi = mi
-        
-        return lo
 
+        return lo
 
     def quick_get_selected_data_array(self):
         # quick roulette
@@ -161,7 +157,6 @@ class FakeAdaBoostDataManager():
         # 2- get_selected_data_array
         for i in range(self.data_number):
             self.selected_data_array[i] = self.quick_roulette(sum_list)
-
 
     def updata_distribution(self, AC_array, acc1):
         """
@@ -199,9 +194,9 @@ class FakeAdaBoostDataManager():
         self.quick_get_selected_data_array()
         for i in range(self.data_number):
             self.dataset.images[i] = self.original_images[self.selected_data_array[i]]
-        
+
         self.data_loader = torch.utils.data.DataLoader(self.dataset, batch_size=self.batch_size, shuffle=False,
-                                         num_workers=self.workers, pin_memory=True)
+                                                       num_workers=self.workers, pin_memory=True)
 
 
 def get_loader(root, data_list, batch_size, workers=4, train=True):

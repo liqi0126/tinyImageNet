@@ -3,6 +3,7 @@ import time
 import warnings
 import random
 import pandas as pd
+import numpy as np
 from tqdm import tqdm
 
 import torch
@@ -159,8 +160,10 @@ def extract_features(loader, model, args):
 
     with torch.no_grad():
         if args.evaluate:
+            images = np.array(loader.dataset.images)
+            results = pd.DataFrame(index=range(images.shape[0]), columns=range(101))
+            results.iloc[:, 0] = images[:, 0]
             for i, images in enumerate(tqdm(loader)):
-                results = pd.DataFrame(index=range(len(loader) * args.batch_size), columns=range(101))
                 images = images.cuda(non_blocking=True)
                 # compute output
                 output = model.forward(images)
@@ -169,9 +172,11 @@ def extract_features(loader, model, args):
                     results.iloc[i*args.batch_size:i*args.batch_size +
                                  output.shape[0], 1:101] = output.cpu().numpy()[:, :100]
                 else:
-                    results.iloc[i*args.batch_size:(i+1)*args.batch_size, :100] = output.cpu().numpy()[:, :100]
+                    results.iloc[i*args.batch_size:(i+1)*args.batch_size, 1:101] = output.cpu().numpy()[:, :100]
         else:
-            results = pd.DataFrame(index=range(len(loader) * args.batch_size), columns=range(102))
+            images = np.array(loader.dataset.images)
+            results = pd.DataFrame(index=range(images.shape[0]), columns=range(102))
+            results.iloc[:, 0] = images[:, 0]
             for i, (images, target) in enumerate(tqdm(loader)):
                 images = images.cuda(non_blocking=True)
                 target = target.cuda(non_blocking=True)
@@ -266,7 +271,9 @@ def main():
     model = model.cuda()
 
     # Data loading code
-    if args.augment:
+    if args.features:
+        train_loader = get_loader(args.data, 'data/train.txt', args.batch_size, args.workers, False)
+    elif args.augment:
         train_loader = get_loader(args.data, 'data/train.txt', args.batch_size, args.workers, True)
     else:
         train_loader = get_loader(args.data, 'data/train.txt', args.batch_size, args.workers, False)
