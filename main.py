@@ -157,22 +157,34 @@ def extract_features(loader, model, args):
     # switch to evaluate mode
     model.eval()
 
-    results = pd.DataFrame(index=range(len(loader) * args.batch_size), columns=range(101))
-
     with torch.no_grad():
-        for i, (images, target) in enumerate(tqdm(loader)):
-            images = images.cuda(non_blocking=True)
-            target = target.cuda(non_blocking=True)
-            # compute output
-            output = model.forward(images)
+        if args.evaluate:
+            for i, images in enumerate(tqdm(loader)):
+                results = pd.DataFrame(index=range(len(loader) * args.batch_size), columns=range(101))
+                images = images.cuda(non_blocking=True)
+                # compute output
+                output = model.forward(images)
 
-            if i == len(loader)-1:
-                results.iloc[i*args.batch_size:i*args.batch_size +
-                             output.shape[0], :100] = output.cpu().numpy()[:, :100]
-                results.iloc[i*args.batch_size:i*args.batch_size + target.shape[0], 100] = target.cpu().numpy()
-            else:
-                results.iloc[i*args.batch_size:(i+1)*args.batch_size, :100] = output.cpu().numpy()[:, :100]
-                results.iloc[i*args.batch_size:(i+1)*args.batch_size, 100] = target.cpu().numpy()
+                if i == len(loader)-1:
+                    results.iloc[i*args.batch_size:i*args.batch_size +
+                                 output.shape[0], 1:101] = output.cpu().numpy()[:, :100]
+                else:
+                    results.iloc[i*args.batch_size:(i+1)*args.batch_size, :100] = output.cpu().numpy()[:, :100]
+        else:
+            results = pd.DataFrame(index=range(len(loader) * args.batch_size), columns=range(102))
+            for i, (images, target) in enumerate(tqdm(loader)):
+                images = images.cuda(non_blocking=True)
+                target = target.cuda(non_blocking=True)
+                # compute output
+                output = model.forward(images)
+
+                if i == len(loader)-1:
+                    results.iloc[i*args.batch_size:i*args.batch_size +
+                                 output.shape[0], 1:101] = output.cpu().numpy()[:, :100]
+                    results.iloc[i*args.batch_size:i*args.batch_size + target.shape[0], 101] = target.cpu().numpy()
+                else:
+                    results.iloc[i*args.batch_size:(i+1)*args.batch_size, 1:101] = output.cpu().numpy()[:, :100]
+                    results.iloc[i*args.batch_size:(i+1)*args.batch_size, 101] = target.cpu().numpy()
 
     results = results.dropna()
     if args.evaluate:
@@ -291,16 +303,16 @@ def main():
 
     cudnn.benchmark = True
 
-    if args.evaluate:
-        test(test_loader, model, args)
-        return
-
     if args.features:
-        if args.evaulate:
+        if args.evaluate:
             extract_features(test_loader, model, args)
         else:
             extract_features(train_loader, model, args)
 
+        return
+
+    if args.evaluate:
+        test(test_loader, model, args)
         return
 
     # for epoch in range(args.start_epoch, args.epochs):

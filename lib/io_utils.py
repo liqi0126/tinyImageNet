@@ -58,12 +58,11 @@ def parse_args():
     parser.add_argument('--warmup-multiplier', default=16, type=int,
                         metavar='E', help='warmup multiplier (default: 16)')
 
-    
     parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                         help='evaluate model on validation set')
     parser.add_argument('-x', '--extract-features', dest='features', action='store_true',
                         help='extract features on train set')
-    
+
     parser.add_argument('-p', '--print-freq', default=10, type=int,
                         metavar='N', help='print frequency (default: 10)')
     parser.add_argument('--save-freq', default=50, type=int,

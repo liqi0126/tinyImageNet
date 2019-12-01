@@ -249,9 +249,11 @@ def main():
 
     # Data loading code
     if args.augment:
-        ada_manager = FakeAdaBoostDataManager(args.data, 'data/train.txt', args.batch_size, args.workers, True, args.using_AdaBoost)
+        ada_manager = FakeAdaBoostDataManager(args.data, 'data/train.txt',
+                                              args.batch_size, args.workers, True, args.using_AdaBoost)
     else:
-        ada_manager = FakeAdaBoostDataManager(args.data, 'data/train.txt', args.batch_size, args.workers, False, args.using_AdaBoost)
+        ada_manager = FakeAdaBoostDataManager(args.data, 'data/train.txt',
+                                              args.batch_size, args.workers, False, args.using_AdaBoost)
     val_loader = get_loader(args.data, 'data/val.txt', args.batch_size, args.workers, False)
     test_loader = get_loader(args.data, 'data/test.txt', args.batch_size, args.workers, False)
 
@@ -291,7 +293,8 @@ def main():
 
     for epoch in range(args.epochs - args.start_epoch):
         # train for one epoch
-        train_acc1, train_loss = train(ada_manager.data_loader, model, criterion, optimizer, scheduler, epoch, summary_writer, args)
+        train_acc1, train_loss = train(ada_manager.data_loader, model, criterion,
+                                       optimizer, scheduler, epoch, summary_writer, args)
 
         if args.using_AdaBoost:
             update_images_weight_for_AdaBoost(ada_manager, model, float(train_acc1) / 100)
