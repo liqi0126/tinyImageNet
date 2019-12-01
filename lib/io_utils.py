@@ -58,6 +58,12 @@ def parse_args():
     parser.add_argument('--warmup-multiplier', default=16, type=int,
                         metavar='E', help='warmup multiplier (default: 16)')
 
+    
+    parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
+                        help='evaluate model on validation set')
+    parser.add_argument('-x', '--extract-features', dest='features', action='store_true',
+                        help='extract features on train set')
+    
     parser.add_argument('-p', '--print-freq', default=10, type=int,
                         metavar='N', help='print frequency (default: 10)')
     parser.add_argument('--save-freq', default=50, type=int,
@@ -66,8 +72,6 @@ def parse_args():
                         help='path to save and log models')
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
                         help='checkpoint / number or best_model')
-    parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
-                        help='evaluate model on validation set')
     parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                         help='use pre-trained model')
     parser.add_argument('--seed', default=None, type=int,

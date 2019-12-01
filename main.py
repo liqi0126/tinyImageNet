@@ -3,6 +3,7 @@ import time
 import warnings
 import random
 import pandas as pd
+from tqdm import tqdm
 
 import torch
 import torch.nn as nn
@@ -20,6 +21,7 @@ from lib.dataset import get_loader
 from lib.model import se_resnext101_32x48d, wide_se_resnext101_32x32d
 from lib.mixup import mixup_data, mixup_criterion
 from lib.loss import LabelSmoothingLoss
+
 
 best_acc1 = 0
 
@@ -151,6 +153,36 @@ def test(test_loader, model, args):
     print(f'=> save results to ' + resultsName)
 
 
+def extract_features(loader, model, args):
+    # switch to evaluate mode
+    model.eval()
+
+    results = pd.DataFrame(index=range(len(loader) * args.batch_size), columns=range(101))
+
+    with torch.no_grad():
+        for i, (images, target) in enumerate(tqdm(loader)):
+            images = images.cuda(non_blocking=True)
+            target = target.cuda(non_blocking=True)
+            # compute output
+            output = model.forward(images)
+
+            if i == len(loader)-1:
+                results.iloc[i*args.batch_size:i*args.batch_size +
+                             output.shape[0], :100] = output.cpu().numpy()[:, :100]
+                results.iloc[i*args.batch_size:i*args.batch_size + target.shape[0], 100] = target.cpu().numpy()
+            else:
+                results.iloc[i*args.batch_size:(i+1)*args.batch_size, :100] = output.cpu().numpy()[:, :100]
+                results.iloc[i*args.batch_size:(i+1)*args.batch_size, 100] = target.cpu().numpy()
+
+    results = results.dropna()
+    if args.evaluate:
+        outputName = args.output_dir + "test_output.csv"
+    else:
+        outputName = args.output_dir + "output.csv"
+    results.to_csv(outputName, index=False)
+    print(f'=> save results to ' + outputName)
+
+
 def accuracy(output, target, topk=(1,)):
     """Computes the accuracy over the k top predictions for the specified values of k"""
     with torch.no_grad():
@@ -261,6 +293,14 @@ def main():
 
     if args.evaluate:
         test(test_loader, model, args)
+        return
+
+    if args.features:
+        if args.evaulate:
+            extract_features(test_loader, model, args)
+        else:
+            extract_features(train_loader, model, args)
+
         return
 
     # for epoch in range(args.start_epoch, args.epochs):
