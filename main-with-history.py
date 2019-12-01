@@ -305,12 +305,16 @@ def main():
         validate(val_loader, model, criterion, 0, summary_writer, args)
         return
 
+    start_AdaBoost = False
     for epoch in range(args.epochs - args.start_epoch):
         # train for one epoch
         train_acc1, train_loss = train(ada_manager.data_loader, model, criterion, optimizer, scheduler, epoch, summary_writer, args)
-
-        if args.using_AdaBoost and train_acc1 > 20:
-            update_images_weight_for_AdaBoost(ada_manager, model, float(train_acc1) / 100)
+        
+        if args.using_AdaBoost:
+            if train_acc1 > 20:
+                start_AdaBoost = True
+            if start_AdaBoost:
+                update_images_weight_for_AdaBoost(ada_manager, model, float(train_acc1) / 100)
 
         # evaluate on validation set
         val_acc1, val_loss = validate(val_loader, model, criterion, epoch, summary_writer, args)
