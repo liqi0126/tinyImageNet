@@ -89,7 +89,7 @@ class FakeAdaBoostDataManager():
                 transforms.RandomResizedCrop(64),
                 transforms.ColorJitter(
                     brightness=0.4, contrast=0.4, saturation=0.4),
-                transforms.RandomRotation(45),
+                transforms.RandomRotation(30),
                 transforms.RandomHorizontalFlip(),
                 # transforms.RandomVerticalFlip(),
                 # transforms.RandomAffine(90),
@@ -119,11 +119,16 @@ class FakeAdaBoostDataManager():
         self.selected_data_array = []
         for i in range(self.data_number):
             self.selected_data_array.append(i)
+        random.shuffle(self.selected_data_array)
 
         # init images_w
         self.images_w = []
         for i in range(self.data_number):
             self.images_w.append(1/self.data_number)
+
+        # init shuffled dataset images
+        for i in range(self.data_number):
+            self.dataset.images[i] = self.original_images[self.selected_data_array[i]]
 
         using_shuffle_in_data_loader = not self.using_AdaBoost
         self.data_loader = torch.utils.data.DataLoader(self.dataset, batch_size=self.batch_size, shuffle=using_shuffle_in_data_loader,

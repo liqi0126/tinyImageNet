@@ -23,10 +23,26 @@ from lib.mixup import mixup_data, mixup_criterion
 from lib.loss import LabelSmoothingLoss
 
 best_acc1 = 0
-#os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+# os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
 
 # epoch, train_acc, train_loss, test_acc, test_loss
 history_list = [[], [], [], [], []]
+
+
+def pure_state_dict(old_dict):
+    S_dict = {}
+    for key, value in old_dict.items():
+        pure_key = key[7:]
+        S_dict[pure_key] = value
+    return S_dict
+
+
+def miss_se(old_dict):
+    S_dict = {}
+    for key, value in old_dict.items():
+        if not 'se' in key:
+            S_dict[key] = value
+    return S_dict
 
 
 def train(train_loader, model, criterion, optimizer, scheduler, epoch, summary_writer, args):
@@ -291,13 +307,16 @@ def main():
         validate(val_loader, model, criterion, 0, summary_writer, args)
         return
 
+    start_AdaBoost = False
     for epoch in range(args.epochs - args.start_epoch):
         # train for one epoch
         train_acc1, train_loss = train(ada_manager.data_loader, model, criterion,
                                        optimizer, scheduler, epoch, summary_writer, args)
-
         if args.using_AdaBoost:
-            update_images_weight_for_AdaBoost(ada_manager, model, float(train_acc1) / 100)
+            if train_acc1 > 20:
+                start_AdaBoost = True
+            if start_AdaBoost:
+                update_images_weight_for_AdaBoost(ada_manager, model, float(train_acc1) / 100)
 
         # evaluate on validation set
         val_acc1, val_loss = validate(val_loader, model, criterion, epoch, summary_writer, args)

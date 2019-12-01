@@ -65,8 +65,8 @@ def parse_args():
 
     parser.add_argument('-p', '--print-freq', default=10, type=int,
                         metavar='N', help='print frequency (default: 10)')
-    parser.add_argument('--save-freq', default=50, type=int,
-                        metavar='S', help='save frequency (default: 50)')
+    parser.add_argument('--save-freq', default=10, type=int,
+                        metavar='S', help='save frequency (default: 10)')
     parser.add_argument('--model-dir', type=str, metavar='PATH',
                         help='path to save and log models')
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
