@@ -21,10 +21,10 @@ Commands below follow this example, and please refer to Usage below for addition
 
 ## Prediction
 - After training, the prediction be automatically generated for you in `./output/your-model-dir/results.csv` 
-- If you want to test model by yourself, you need to specific which checkpoint to use. For example, Run
+- If you want to make prediction by yourself, you need to specific which checkpoint to use. For example, Run
 ```python ./main.py  --arch efficientNet-b7 --model-dir efficientNet_mixup --resume best-model --evaluate``` to make prediction using the best model in efficientNet_mixup directory.
 
-### Usage
+## Usage
 
 ```
 usage: main.py [-h] [--data DIR] [--arch ARCH] [-j N] [--epochs N]
