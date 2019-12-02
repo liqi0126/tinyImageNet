@@ -339,7 +339,7 @@ def main():
         # remember best acc@1 and save checkpoint
         best_acc1 = max(val_acc1, best_acc1)
 
-        if (epoch + 1) % args.save_freq == 0 or ((epoch + 1) == args.epochs):
+        if (epoch + 1) % args.save_freq == 0 or ((epoch + 1) == args.epochs - args.start_epoch):
             state = {
                 'epoch': epoch + 1,
                 'arch': args.arch,

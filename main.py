@@ -333,9 +333,9 @@ def main():
         # remember best acc@1 and save checkpoint
         best_acc1 = max(acc1, best_acc1)
 
-        if (epoch + 1) % args.save_freq == 0 or ((epoch + 1) == args.epochs):
+        if (epoch + 1) % args.save_freq == 0 or ((epoch + 1) == args.epochs - args.start_epoch):
             state = {
-                'epoch': epoch + 1,
+                'epoch': args.start_epoch + epoch + 1,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
                 # 'optimizer': optimizer.state_dict(),
