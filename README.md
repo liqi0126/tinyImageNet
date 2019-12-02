@@ -16,7 +16,7 @@ Run
 ```python ./main.py --arch [ARCHTECHTURE] --model-dir [DIRTOSAVE] [--OPTIONARG]```
 
 For example, run `python ./main.py  --arch efficientNet-b7 --model-dir efficientNet_mixup --lr 0.07`  
-Commands below follow this example, and please refer to Usage below for additional options.
+Commands below follow this example, and please refer to Usage below for additional options. Note that you need to specify the `model-dir` to save all the outputs. 
 
 
 ## Prediction
@@ -27,7 +27,6 @@ Commands below follow this example, and please refer to Usage below for addition
 ### Usage
 
 ```
-
 usage: main.py [-h] [--data DIR] [--arch ARCH] [-j N] [--epochs N]
                [--start-epoch N] [-b N] [--lr LR] [--momentum m] [--wd W]
                [--mixup MIXUP] [--alpha ALPHA] [--augment AUGMENT]
