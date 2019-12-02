@@ -9,7 +9,7 @@ This code is modified from [PyTorch ImageNet classification example](https://git
  - [tensorboard](https://www.tensorflow.org/tensorboard)
 
 ## Getting started
-* put the all data into `./data`
+* Put data into `./data` directory
 
 ## Train
 Run
@@ -24,13 +24,11 @@ Commands below follow this example, and please refer to Usage below for addition
 - If you want to test model by yourself, just add `--evaluate` in train command.
 ```python ./test.py --dataset miniImagenet --model Conv4 --method baseline --train_aug```
 
-## Results
-* The test results will be recorded in `./record/results.txt`
-* For all the pre-computed results, please see `./record/few_shot_exp_figures.xlsx`. This will be helpful for including your own results for a fair comparison.
-
 ### Usage
 
-```usage: main.py [-h] [--data DIR] [--arch ARCH] [-j N] [--epochs N]
+```
+
+usage: main.py [-h] [--data DIR] [--arch ARCH] [-j N] [--epochs N]
                [--start-epoch N] [-b N] [--lr LR] [--momentum m] [--wd W]
                [--mixup MIXUP] [--alpha ALPHA] [--augment AUGMENT]
                [--label-smoothing LABEL_SMOOTHING] [--warmup-epoch E]
