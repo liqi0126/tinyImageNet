@@ -76,7 +76,7 @@ def parse_args():
     parser.add_argument('--seed', default=None, type=int,
                         help='seed for initializing training. ')
     parser.add_argument('--using-AdaBoost', default=False, type=bool,
-                        help='using AdaBoost to manage training data?')
+                        help='using AdaBoost to manage training data')
 
     args = parser.parse_args()
     vars(args)['output_dir'] = './output/' + args.model_dir + '/'
